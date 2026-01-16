@@ -17,7 +17,7 @@ const pagination = ref({
   total: 0,
 });
 
-const globalFilter = ref("");
+const globalFilter = ref(null);
 
 const table = useTemplateRef("table");
 
@@ -31,7 +31,6 @@ const fetchIssues = async () => {
       search: globalFilter.value,
     });
 
-    // Map response
     issues.value = res.data.items;
     pagination.value.total = res.data.pagination.totalCount;
   } catch (err) {
@@ -40,6 +39,7 @@ const fetchIssues = async () => {
     loading.value = false;
   }
 };
+
 
 const onPageChange = () => {
   // Ensure valid page number

@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 definePageMeta({
   title: "Login",
@@ -6,18 +5,21 @@ definePageMeta({
 });
 
 const api = useApi();
+const toast = useToast();
 const email = ref("");
 const password = ref("");
 const show = ref(false);
 const loading = ref(false);
 const error = ref("");
 
-const isLoggedIn = computed(() => process.client && !!localStorage.getItem("token"));
+const isLoggedIn = computed(
+  () => process.client && !!localStorage.getItem("token")
+);
 
-const auth = useAuthStorage()
+const auth = useAuthStorage();
 
 if (import.meta.client) {
-  auth.load()
+  auth.load();
 }
 
 const handleLogin = async () => {
@@ -29,8 +31,15 @@ const handleLogin = async () => {
       // Store user data
       localStorage.setItem("userProfile", JSON.stringify(response.objParam1));
       localStorage.setItem("token", response.stringParam1);
+
       // Redirect to dashboard or home
       await navigateTo("/issue");
+
+      toast.add({
+        title: "Login Successful",
+        description: "You have been logged in successfully.",
+        color: "success",
+      });
     } else {
       error.value = response.message || "Login failed";
     }
@@ -40,7 +49,6 @@ const handleLogin = async () => {
     loading.value = false;
   }
 };
-
 </script>
 
 <template>

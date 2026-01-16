@@ -46,18 +46,35 @@ class ApiClient {
     }
   }
 
- async getIssues(params: any){
-    try {
-      const query = new URLSearchParams(params).toString();
-      const response = await $fetch(`${this.baseApiUrl}/api/Issue/list?${query}`,{
-        method: 'GET'
-      });
-      return response;
-    } catch (error) {
-      throw error;
+async getIssues(params: any) {
+  try {
+    const cleanedParams: Record<string, string> = {};
+
+    for (const key in params) {
+      const value = params[key];
+
+      if (
+        value !== null &&
+        value !== undefined &&
+        value !== "" &&
+        value !== "null"
+      ) {
+        cleanedParams[key] = String(value);
+      }
     }
+
+    const query = new URLSearchParams(cleanedParams).toString();
+
+    return await $fetch(
+      `${this.baseApiUrl}/api/Issue/list?${query}`,
+      { method: "GET" }
+    );
+  } catch (error) {
+    throw error;
   }
-  // Add other API methods as needed
+}
+
+  // Add other API methods 
 }
 
 export const useApi = () => {
