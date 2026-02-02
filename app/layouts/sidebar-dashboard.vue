@@ -1,44 +1,48 @@
 <template>
-    <UDashboardGroup>
-      <UDashboardSidebar collapsible>
-        <template #header>
-          <h1 class="mx-auto font-bold">ITS</h1>
-        </template>
+  <UDashboardGroup>
+    <UDashboardSidebar collapsible>
+      <template #header>
+        <h1 class="mx-auto font-bold">ITS</h1>
+      </template>
 
-        <UNavigationMenu :items="items[0]" orientation="vertical" />
-        <UNavigationMenu
-          :items="items[1]"
-          orientation="vertical"
-          class="mt-auto"
-        />
-      </UDashboardSidebar>
-      <UDashboardPanel>
-        <template #header>
-          <UDashboardNavbar title="Dashboard">
-            <template #leading>
-              <UDashboardSidebarCollapse icon="i-lucide-menu" variant="ghost" />
-            </template>
-          </UDashboardNavbar>
-        </template>
-        <template #body>
-          <slot />
-        </template>
-      </UDashboardPanel>
-      <LoadingSpinner
-        v-if="isLoggingOut"
-        message="Signing you out..."
-        overlay
-        size="lg"
+      <UNavigationMenu :items="items[0]" orientation="vertical" />
+      <UNavigationMenu
+        :items="items[1]"
+        orientation="vertical"
+        class="mt-auto"
       />
-    </UDashboardGroup>
+    </UDashboardSidebar>
+    <UDashboardPanel>
+      <template #header>
+        <UDashboardNavbar title="Dashboard">
+          <template #leading>
+            <UDashboardSidebarCollapse icon="i-lucide-menu" variant="ghost" />
+          </template>
+        </UDashboardNavbar>
+      </template>
+      <template #body>
+        <div class="pt-10 px-6">
+          <slot />
+        </div>
+      </template>
+    </UDashboardPanel>
+    <LoadingSpinner
+      v-if="isLoggingOut"
+      message="Signing you out..."
+      overlay
+      size="lg"
+    />
+  </UDashboardGroup>
 </template>
 
 <script setup lang="ts">
+
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const { open } = useSidebar();
 const api = useApi();
 const toast = useToast();
+const auth = useAuthStorage();
 
 const isLoggingOut = ref(false);
 const error = ref("");
@@ -57,6 +61,7 @@ const handleLogout = async () => {
           color: "error",
         });
       } finally {
+        auth.clear();
         await navigateTo("/");
         isLoggingOut.value = false;
         toast.add({
