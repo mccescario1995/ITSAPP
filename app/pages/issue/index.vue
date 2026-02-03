@@ -40,12 +40,8 @@ const pagination = ref({
   total: 0,
 });
 
-const globalFilter = ref(null);
-
 const fetchIssues = async () => {
   loading.value = true;
-  console.log("User profile:", userProfile.value);
-  console.log("User profile role:", userProfile.value?.role);
   try {
     const res: any = await api.getIssues({
       page: pagination.value.page,
@@ -118,6 +114,56 @@ const onPageSwitch = () => {
 
 onMounted(fetchStatuses);
 
+const globalFilter = ref(null);
+
+const deleteModal = ref({
+  isOpen: false,
+  issue: null as Issue | null,
+});
+
+const openDeleteModal = (issue: Issue) => {
+  deleteModal.value = {
+    isOpen: true,
+    issue,
+  };
+};
+
+const closeDeleteModal = () => {
+  deleteModal.value = {
+    isOpen: false,
+    issue: null,
+  };
+};
+
+const handleDeleteSuccess = () => {
+  closeDeleteModal();
+  fetchIssues();
+};
+
+const editModal = ref({
+  isOpen: false,
+  issue: null as Issue | null,
+});
+
+const openEditModal = (issue: Issue) => {
+  editModal.value = {
+    isOpen: true,
+    issue,
+  };
+};
+
+const closeEditModal = () => {
+  editModal.value = {
+    isOpen: false,
+    issue: null,
+  };
+};
+
+const handleEditSuccess = () => {
+  closeEditModal();
+  fetchIssues(); // Refresh the table
+};
+
 const issueStatuses = ref<IssueStatus[]>([]);
 const loadingStatus = ref(false);
 
@@ -136,30 +182,28 @@ const columns: TableColumn<Issue>[] = [
     cell: ({ row }) => {
       const issue = row.original;
       const UButton = resolveComponent("UButton");
-      const EditIssueModal = resolveComponent("EditIssueModal");
-      const DeleteIssueModal = resolveComponent("DeleteIssueModal");
+      const isOpen = ref(false);
+
       return h("div", { class: "flex gap-1" }, [
         h(UButton, {
           size: "xs",
           color: "secondary",
           variant: "solid",
           icon: "i-lucide-eye",
-          issue: issue,
           to: `/issue/${issue.id}`,
         }),
-        h(EditIssueModal, {
+        h(UButton, {
           size: "xs",
-          color: "info",
+          color: "primary",
           variant: "solid",
           icon: "i-lucide-edit-2",
-          issue: issue,
+          onClick: () => openEditModal(issue),
         }),
-        h(DeleteIssueModal, {
+        h(UButton, {
           size: "xs",
-          variant: "solid",
           color: "error",
           icon: "i-lucide-trash",
-          issue: issue,
+          onClick: () => openDeleteModal(issue),
         }),
       ]);
     },
@@ -194,17 +238,17 @@ export type Issue = {
   responsibleEmployee: string;
   issueTypeId: number;
   responsibleGroupId: number;
-  responsibleEmpId: string | null;
+  responsibleEmployeeId: string | null;
   status: number;
 };
 
-const isModalOpen = ref(false)
+const isModalOpen = ref(false);
 
 const handleClose = (success: boolean) => {
   if (success) {
     fetchIssues();
   }
-}
+};
 
 watch(
   () => [pagination.value.page, pagination.value.pageSize, globalFilter.value],
@@ -273,5 +317,19 @@ watch(
         @update:page="(p) => (pagination.page = p)"
       />
     </div>
+    <EditIssueModal
+      v-if="editModal.issue"
+      :open="editModal.isOpen"
+      @update:open="(v) => (editModal.isOpen = v)"
+      :issue="editModal.issue"
+      @success="handleEditSuccess"
+    />
+    <DeleteIssueModal
+      v-if="deleteModal.issue"
+      :open="deleteModal.isOpen"
+      @update:open="(v) => (deleteModal.isOpen = v)"
+      :issue="deleteModal.issue"
+      @success="handleDeleteSuccess"
+    />
   </div>
 </template>

@@ -3,6 +3,23 @@ type EmployeeOption = {
   name: string;
 };
 
+export type SessionUser = {
+  userId: number;
+  username: string;
+  role: "USER" | "ADMIN" | string;
+  profile: UserProfile;
+};
+
+export type UserProfile = {
+  UserId: number;
+  Username: string;
+  EmplId: string;
+  Employeename2: string;
+  Corporate: string;
+  Positionname: string;
+  Departmentname: string;
+};
+
 class ApiClient {
   private baseApiUrl: string;
 

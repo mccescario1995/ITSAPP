@@ -28,12 +28,6 @@ export type SessionUser = {
   profile: UserProfile;
 };
 
-// auth.profile;
-// auth.userId;
-// auth.role;
-// auth.username;
-
-
 const { fetchSession } = useAuthStorage();
 const userProfile = await fetchSession();
 
@@ -366,7 +360,7 @@ onMounted(() => {
 </template>
 
 <!-- Helper component for detail rows -->
-<!-- <script setup lang="ts">
+<!-- <script setup lang="ts"
 const DetailRow = defineProps<{
   label: string;
   value?: string | number;

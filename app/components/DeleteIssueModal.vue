@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const props = defineProps<{
+  open: boolean;
   issue: {
     id: number;
     issueDetails: string;
@@ -7,7 +8,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  close: [boolean];
+  (e: "update:open", value: boolean): void;
+  (e: "success"): void;
 }>();
 
 const api = useApi();
@@ -17,17 +19,19 @@ const loading = ref(false);
 const onDelete = async () => {
   loading.value = true;
   try {
-    const response = await api.deleteIssue(props.issue.id);
+    await api.deleteIssue(props.issue.id);
 
-    if (response) {
-      toast.add({
-        title: "Success",
-        description: "Issue deleted successfully",
-        color: "success",
-      });
+    toast.add({
+      title: "Deleted",
+      description: "Issue deleted successfully",
+      color: "error",
+    });
 
-      emit("close", true);
-    }
+    // Close the modal
+    emit("update:open", false);
+    
+    // Emit success event to trigger table refresh
+    emit("success");
   } catch (error) {
     console.error("Failed to delete issue", error);
     toast.add({
@@ -43,6 +47,8 @@ const onDelete = async () => {
 
 <template>
   <UModal
+    :open="open"
+    @update:open="$emit('update:open', $event)"
     title="Delete Issue"
     description="Are you sure you want to delete this issue?"
     :ui="{
@@ -50,13 +56,6 @@ const onDelete = async () => {
       description: 'text-sm sm:text-base',
     }"
   >
-    <UButton
-      icon="i-lucide-trash"
-      color="error"
-      variant="solid"
-      size="xs"
-      aria-label="Delete Issue"
-    />
     <template #body>
       <div class="space-y-3 sm:space-y-4 justify-center text-center">
         <UIcon
@@ -72,7 +71,7 @@ const onDelete = async () => {
       </div>
     </template>
 
-    <template #footer="{ close }">
+    <template #footer>
       <div
         class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full"
       >
@@ -87,7 +86,7 @@ const onDelete = async () => {
           Delete
         </UButton>
         <UButton
-          @click="close"
+          @click="$emit('update:open', false)"
           variant="outline"
           size="lg"
           class="w-full sm:w-auto"

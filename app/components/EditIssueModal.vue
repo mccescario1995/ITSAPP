@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { user } from "#build/ui";
 import { z } from "zod";
 
 const props = defineProps<{
+  open: boolean;
   issue: {
     id: number;
     issueDetails: string;
@@ -15,7 +17,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  close: [boolean];
+  (e: "update:open", value: boolean): void;
+  (e: "success"): void;
 }>();
 
 const api = useApi();
@@ -52,6 +55,8 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>;
 
+const auth = (await api.getSession()) as SessionUser;
+
 const fetchOptions = async () => {
   try {
     const [typesRes, groupsRes, statusRes] = await Promise.all([
@@ -82,6 +87,7 @@ const onSubmit = async () => {
       responsiblegroupid: form.responsibleGroupId,
       responsibleempid: form.responsibleEmpId || null,
       status: form.status,
+      modifiedbyuserid: auth.userId,
     };
 
     console.log("Updating issue data:", data);
@@ -95,7 +101,9 @@ const onSubmit = async () => {
         color: "success",
       });
 
-      emit("close", true);
+      // Close modal and emit success
+      emit("update:open", false);
+      emit("success");
     }
   } catch (error) {
     console.error("Failed to update issue", error);
@@ -146,27 +154,40 @@ watch(selectedEmployee, (val: any) => {
   form.responsibleEmpId = val?.value ?? "";
 });
 
-// Set initial selectedEmployee if responsibleEmpId exists
 onMounted(async () => {
   await fetchOptions();
   if (props.issue.responsibleEmployeeId) {
     selectedEmployee.value = {
       value: props.issue.responsibleEmployeeId,
       label: props.issue.responsibleEmployee,
-    }; // Placeholder, might need to fetch name
+    };
   }
 });
+
+watch(
+  () => props.open,
+  async (isOpen) => {
+    if (isOpen) {
+      await fetchOptions();
+      if (props.issue.responsibleEmployeeId) {
+        selectedEmployee.value = {
+          value: props.issue.responsibleEmployeeId,
+          label: props.issue.responsibleEmployee,
+        };
+      }
+    }
+  },
+);
 </script>
 
 <template>
-  <UModal title="Edit Issue" description="Edit an Existing Issue" :ui="{ title: 'text-2xl font-semibold' }">
-    <UButton
-      icon="i-lucide-pencil"
-      color="primary"
-      variant="solid"
-      size="xs"
-      aria-label="Edit"
-    />
+  <UModal
+    :open="open"
+    @update:open="$emit('update:open', $event)"
+    title="Edit Issue"
+    description="Edit an Existing Issue"
+    :ui="{ title: 'text-2xl font-semibold' }"
+  >
     <template #body>
       <UForm
         :schema="schema"

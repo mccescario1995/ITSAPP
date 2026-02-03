@@ -22,7 +22,9 @@
       </template>
       <template #body>
         <div class="pt-10 px-6">
-          <slot />
+          <UApp>
+            <slot />
+          </UApp>
         </div>
       </template>
     </UDashboardPanel>
@@ -36,7 +38,6 @@
 </template>
 
 <script setup lang="ts">
-
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const { open } = useSidebar();
