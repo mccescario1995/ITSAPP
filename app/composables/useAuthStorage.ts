@@ -47,7 +47,6 @@ export const useAuthStorage = () => {
         clear();
         throw error;
       }
-      // For other errors, still clear and re-throw to be safe
       clear();
       throw error;
     }
