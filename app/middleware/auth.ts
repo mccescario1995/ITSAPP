@@ -1,5 +1,7 @@
 // middleware/auth.ts
 export default defineNuxtRouteMiddleware(async (to) => {
+  const toast = useToast();
+
   const auth = useAuthStorage();
 
   // Skip on login page to prevent redirect loops
@@ -7,23 +9,30 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return;
   }
 
-  // Load cached session from sessionStorage (for quick UI response)
   if (process.client) {
     auth.load();
   }
 
-  // ALWAYS verify session with server - cached data may be stale
-  // This handles cases where server session was invalidated (e.g., API restart)
   try {
     await auth.fetchSession();
   } catch {
-    // Server session invalid - clear and redirect to login
     auth.clear();
+
+    toast.add({
+      title: "Session Ended/Expired",
+      description: "For your security, please log in again.",
+      color: "error",
+    });
+
     return navigateTo("/");
   }
 
-  // Final check - if still no user profile, redirect to login
   if (!auth.userProfile.value) {
+    toast.add({
+      title: "Session Ended/Expired",
+      description: "For your security, please log in again.",
+      color: "error",
+    });
     return navigateTo("/");
   }
 });

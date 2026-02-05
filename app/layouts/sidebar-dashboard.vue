@@ -67,7 +67,7 @@ const handleLogout = async () => {
         isLoggingOut.value = false;
         toast.add({
           title: "Logged Out",
-          description: "You Successfully Logged out.",
+          description: "You have been securely logged out.",
           color: "success",
         });
       }

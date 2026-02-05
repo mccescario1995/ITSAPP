@@ -1,3 +1,4 @@
+import { UEditor } from '../../.nuxt/components';
 <script setup lang="ts">
 const props = defineProps<{
   open: boolean;
@@ -29,7 +30,7 @@ const onDelete = async () => {
 
     // Close the modal
     emit("update:open", false);
-    
+
     // Emit success event to trigger table refresh
     emit("success");
   } catch (error) {
@@ -50,10 +51,10 @@ const onDelete = async () => {
     :open="open"
     @update:open="$emit('update:open', $event)"
     title="Delete Issue"
-    description="Are you sure you want to delete this issue?"
+    description="This action cannot be undone."
     :ui="{
       title: 'text-xl sm:text-2xl font-semibold',
-      description: 'text-sm sm:text-base',
+      description: 'text-red-500 sm:text-base',
     }"
   >
     <template #body>
@@ -62,12 +63,13 @@ const onDelete = async () => {
           name="i-lucide-alert-triangle"
           class="size-24 sm:size-32 lg:size-40 text-error-500 mx-auto sm:hidden md:block"
         />
-        <p class="text-base sm:text-lg lg:text-xl text-gray-600 px-2">
-          Issue: <strong>{{ issue.issueDetails }}</strong>
+        <p class="text-sm sm:text-base text-red-600 font-bold">
+          Are you sure you want to delete this issue?
         </p>
-        <p class="text-sm sm:text-base text-red-600">
-          This action cannot be undone.
+        <p class="text-base sm:text-lg lg:text-xl text-gray-600 px-2 ">
+          <strong> Issue # {{ issue.id }}</strong>
         </p>
+        
       </div>
     </template>
 

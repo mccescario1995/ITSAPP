@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { user } from "#build/ui";
 import { z } from "zod";
+import type { EditorToolbarItem } from "@nuxt/ui";
 
 const props = defineProps<{
   open: boolean;
@@ -90,11 +90,9 @@ const onSubmit = async () => {
       modifiedbyuserid: auth.userId,
     };
 
-    console.log("Updating issue data:", data);
     const response = await api.updateIssue(props.issue.id, data);
 
     if (response) {
-      console.log("Issue updated successfully:", response);
       toast.add({
         title: "Success",
         description: "Issue updated successfully",
@@ -178,6 +176,53 @@ watch(
     }
   },
 );
+
+const toolbarItems: EditorToolbarItem[][] = [
+  [
+    {
+      kind: "mark",
+      mark: "bold",
+      icon: "i-lucide-bold",
+      tooltip: { text: "Bold" },
+    },
+    {
+      kind: "mark",
+      mark: "italic",
+      icon: "i-lucide-italic",
+      tooltip: { text: "Italic" },
+    },
+    {
+      kind: "mark",
+      mark: "underline",
+      icon: "i-lucide-underline",
+      tooltip: { text: "Underline" },
+    },
+  ],
+  [
+    {
+      kind: "bulletList",
+      icon: "i-lucide-list",
+      tooltip: { text: "Bullet List" },
+    },
+    {
+      kind: "orderedList",
+      icon: "i-lucide-list-ordered",
+      tooltip: { text: "Ordered List" },
+    },
+  ],
+  [
+    {
+      kind: "blockquote",
+      icon: "i-lucide-text-quote",
+      tooltip: { text: "Quote" },
+    },
+    {
+      kind: "codeBlock",
+      icon: "i-lucide-square-code",
+      tooltip: { text: "Code Block" },
+    },
+  ],
+];
 </script>
 
 <template>
@@ -186,7 +231,11 @@ watch(
     @update:open="$emit('update:open', $event)"
     title="Edit Issue"
     description="Edit an Existing Issue"
-    :ui="{ title: 'text-2xl font-semibold' }"
+    :ui="{
+      content:
+        'w-[calc(100vw-2rem)] max-w-4xl rounded-lg shadow-lg ring ring-default',
+      title: 'text-2xl font-semibold',
+    }"
   >
     <template #body>
       <UForm
@@ -195,24 +244,6 @@ watch(
         @submit="onSubmit"
         class="space-y-4"
       >
-        <UFormField label="Issue Details" required>
-          <UTextarea
-            v-model="form.issueDetails"
-            placeholder="Describe the issue..."
-            :rows="4"
-            class="w-full"
-          />
-        </UFormField>
-
-        <UFormField label="Action Plan">
-          <UTextarea
-            v-model="form.actionPlan"
-            placeholder="Describe the action plan..."
-            :rows="3"
-            class="w-full"
-          />
-        </UFormField>
-
         <UFormField label="Issue Type" required>
           <USelect
             class="w-full"
@@ -257,6 +288,36 @@ watch(
             label-key="name"
             placeholder="Select status"
           />
+        </UFormField>
+
+        <UFormField label="Issue Details" required>
+          <!-- <UTextarea
+            v-model="form.issueDetails"
+            placeholder="Describe the issue..."
+            :rows="4"
+            class="w-full"
+          /> -->
+          <UEditor
+            v-slot="{ editor }"
+            v-model="form.issueDetails"
+            content-type="html"
+            placeholder="Describe the action plan..."
+            class="w-full min-h-50 border p-2 rounded border-gray-300"
+          >
+            <UEditorToolbar :editor="editor" :items="toolbarItems" />
+          </UEditor>
+        </UFormField>
+
+        <UFormField label="Action Plan">
+          <UEditor
+            v-slot="{ editor }"
+            v-model="form.actionPlan"
+            content-type="html"
+            placeholder="Describe the action plan..."
+            class="w-full min-h-50 border p-2 rounded border-gray-300"
+          >
+            <UEditorToolbar :editor="editor" :items="toolbarItems" />
+          </UEditor>
         </UFormField>
 
         <div class="flex gap-4 justify-end">

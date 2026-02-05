@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { TabsItem } from "@nuxt/ui";
+
 definePageMeta({
   title: "Issue Page",
   layout: "sidebar-dashboard",
@@ -45,8 +47,6 @@ type IssueMessage = {
   createdBy: string;
   createdDate: string;
 };
-
-
 
 // Status color mapping
 const statusColorMap: Record<string, any> = {
@@ -187,6 +187,13 @@ onMounted(() => {
   fetchIssueMessages();
   fetchIssue();
 });
+
+const items: TabsItem[] = [
+  { label: "Issue Details", tab: "details" },
+  { label: "Action Plan", tab: "action" },
+];
+
+const activeTab = ref("details");
 </script>
 
 <template>
@@ -220,22 +227,14 @@ onMounted(() => {
         <DetailRow label="User" :value="issue.createdBy" />
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <!-- <div class="grid grid-cols-2 gap-4">
         <DetailRow label="Issue Details" :value="issue.issueDetails" />
 
-        <DetailRow
+        <DetailRowMarkup
           label="Action Plan"
           :value="issue.actionPlan || 'No action plan provided'"
         />
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <DetailRow
-          label="Created Date"
-          :value="formatDate(issue.createdDate)"
-        />
-        <DetailRow label="Last Updated" :value="issue.issueType" />
-      </div>
+      </div> -->
 
       <div class="grid grid-cols-2 gap-4">
         <DetailRow
@@ -245,6 +244,14 @@ onMounted(() => {
         <DetailRow
           label="Responsible Employee"
           :value="issue.responsibleEmployee || 'Not assigned'"
+        />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <DetailRow label="Issue Type" :value="issue.issueType" />
+        <DetailRow
+          label="Created Date"
+          :value="formatDate(issue.createdDate)"
         />
       </div>
     </div>
@@ -260,6 +267,23 @@ onMounted(() => {
       </div>
 
       <div v-else class="ms-7 relative border-l border-gray-200 pl-6 space-y-6">
+        <UTabs
+          v-model:active="activeTab"
+          :items="items"
+          class="w-full"
+          variant="link"
+          color="neutral"
+        >
+          <template #content="{ item }">
+            <DetailRowMarkup
+              label="Issue Details"
+              :value="issue"
+              :issue="issue"
+              :tab="item.tab"
+            />
+          </template>
+        </UTabs>
+
         <template v-for="msg in issueMessages" :key="msg.id">
           <!-- ===================== -->
           <!-- SYSTEM MESSAGE EVENT -->
@@ -285,18 +309,35 @@ onMounted(() => {
           <!-- ===================== -->
           <!-- NORMAL USER MESSAGE -->
           <!-- ===================== -->
-          <div v-else class="relative">
+          <div
+            v-else
+            class="relative -left-[35px] flex items-start gap-3 text-sm text-gray-500 w-full"
+          >
             <span
-              class="absolute -left-[30px] top-5 h-3 w-3 rounded-full bg-primary"
-            />
+              class="-left-[35px] flex h-6 w-6 items-center justify-center rounded-lg bg-gray-100 border"
+            >
+              <UIcon name="i-lucide-user" class="text-gray-500" />
+            </span>
 
-            <div class="bg-white border rounded-lg shadow-sm">
+            <div
+              class="border rounded-lg shadow-sm w-full"
+              :class="
+                msg.createdByUserId === auth.userId
+                  ? 'bg-blue-50 text-gray-700'
+                  : 'bg-yellow-50 text-gray-700 '
+              "
+            >
               <div
-                class="flex items-center justify-between px-4 py-2 border-b bg-gray-50 rounded-t-lg"
+                class="flex items-center justify-between px-4 py-2 border-b rounded-t-lg"
+                :class="
+                  msg.createdByUserId === auth.userId
+                    ? 'bg-blue-100 text-gray-700 '
+                    : 'bg-yellow-100 text-gray-700'
+                "
               >
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-user" class="text-gray-500" />
-                  <span class="font-medium text-sm font-bold">
+                  <UIcon name="i-lucide-user" class="" />
+                  <span class="text-sm font-bold">
                     {{ msg.createdBy }}
                   </span>
                 </div>
@@ -306,9 +347,10 @@ onMounted(() => {
                 </span>
               </div>
 
-              <div class="px-4 py-3 text-sm text-gray-800 whitespace-pre-line">
-                {{ msg.messageDetail }}
-              </div>
+              <div
+                class="px-4 py-3 text-sm text-gray-800 whitespace-pre-line prose prose-sm max-w-none"
+                v-html="msg.messageDetail"
+              />
             </div>
           </div>
         </template>
@@ -359,17 +401,3 @@ onMounted(() => {
   </div>
 </template>
 
-<!-- Helper component for detail rows -->
-<!-- <script setup lang="ts"
-const DetailRow = defineProps<{
-  label: string;
-  value?: string | number;
-}>();
-</script>
-
-<template #default>
-  <div>
-    <label class="block text-sm font-medium text-gray-700">{{ label }}</label>
-    <p class="mt-1 text-sm text-gray-900"><slot>{{ value }}</slot></p>
-  </div>
-</template> -->

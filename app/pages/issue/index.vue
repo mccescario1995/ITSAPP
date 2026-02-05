@@ -173,6 +173,13 @@ const getStatusColor = (statusId: number) => {
   return statusColorMap[name] ?? "neutral";
 };
 
+const stripHtml = (html: string) => {
+  if (!html) return "";
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+};
+
 // Table Columns
 const columns: TableColumn<Issue>[] = [
   { accessorKey: "id", header: "#", cell: ({ row }) => `#${row.original.id}` },
@@ -208,7 +215,22 @@ const columns: TableColumn<Issue>[] = [
       ]);
     },
   },
-  { accessorKey: "issueDetails", header: "Issue Details" },
+  {
+    accessorKey: "issueDetails",
+    header: "Issue Details",
+    cell: ({ row }) => {
+      const issue = row.original;
+      const UEditor = resolveComponent("UEditor");
+
+      return h(UEditor, {
+        modelValue: issue.issueDetails,
+        editable: false,
+        class:
+          "max-w-45 line-clamp-1 prose prose-sm [&_p]:my-0 [&_ul]:my-0 [&_ol]:my-0",
+      });
+    },
+  },
+
   {
     accessorKey: "statusName",
     header: "Status",
@@ -222,7 +244,21 @@ const columns: TableColumn<Issue>[] = [
       });
     },
   },
-  { accessorKey: "actionPlan", header: "Action Plan" },
+    // {
+    //   accessorKey: "actionPlan",
+    //   header: "Action Plan",
+    //   cell: ({ row }) => {
+    //     const issue = row.original;
+    //     const UEditor = resolveComponent("UEditor");
+
+    //     return h(UEditor, {
+    //       modelValue: issue.actionPlan,
+    //       editable: false,
+    //       class:
+    //         "max-w-45 line-clamp-1 prose prose-sm [&_p]:my-0 [&_ul]:my-0 [&_ol]:my-0",
+    //     });
+    //   },
+    // },
   { accessorKey: "issueType", header: "Issue Type" },
   { accessorKey: "responsibleGroupName", header: "Responsible Group" },
   { accessorKey: "responsibleEmployee", header: "Responsible Employee" },

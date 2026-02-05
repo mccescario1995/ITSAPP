@@ -47,13 +47,14 @@ const handleLogin = async ({ data }: FormSubmitEvent<Schema>) => {
     }
   } catch (err: any) {
     error.value = err?.data?.message || "Invalid username or password";
+    console.log("Login error:", err);
   } finally {
     loading.value = false;
     toast.add({
-      title: "Login Attempt",
+      title: `${error.value ? "Login Failed" : "Welcome back!"}`,
       description: error.value
-        ? `Login failed: ${error.value}`
-        : "Login process completed.",
+        ? "Please check your credentials and try again."
+        : "You have successfully signed in.",
       color: error.value ? "error" : "success",
     });
   }

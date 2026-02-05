@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { z } from "zod";
 import type { FormSubmitEvent } from "#ui/types";
+import type { EditorToolbarItem } from "@nuxt/ui";
 
 const isOpen = defineModel<boolean>({ default: false });
 
@@ -99,13 +100,9 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
       createdbyuserid: auth.userId,
     };
 
-    console.log("Submitting issue data:", data);
     const response = await api.createIssue(data);
 
     if (response) {
-
-      console.log("API Response:", response);
-      console.log("Issue created successfully:", response);
       toast.add({
         title: "Success",
         description: "Issue created successfully",
@@ -172,10 +169,66 @@ watch(selectedEmployee, (val: any) => {
 });
 
 onMounted(fetchOptions);
+
+const toolbarItems: EditorToolbarItem[][] = [
+  [
+    {
+      kind: "mark",
+      mark: "bold",
+      icon: "i-lucide-bold",
+      tooltip: { text: "Bold" },
+    },
+    {
+      kind: "mark",
+      mark: "italic",
+      icon: "i-lucide-italic",
+      tooltip: { text: "Italic" },
+    },
+    {
+      kind: "mark",
+      mark: "underline",
+      icon: "i-lucide-underline",
+      tooltip: { text: "Underline" },
+    },
+  ],
+  [
+    {
+      kind: "bulletList",
+      icon: "i-lucide-list",
+      tooltip: { text: "Bullet List" },
+    },
+    {
+      kind: "orderedList",
+      icon: "i-lucide-list-ordered",
+      tooltip: { text: "Ordered List" },
+    },
+  ],
+  [
+    {
+      kind: "blockquote",
+      icon: "i-lucide-text-quote",
+      tooltip: { text: "Quote" },
+    },
+    {
+      kind: "codeBlock",
+      icon: "i-lucide-square-code",
+      tooltip: { text: "Code Block" },
+    },
+  ],
+];
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" title="Add Issue" description="Add a New Issue">
+  <UModal
+    v-model:open="isOpen"
+    title="Add Issue"
+    description="Add a New Issue"
+    :ui="{
+      content:
+        'w-[calc(100vw-2rem)] max-w-4xl rounded-lg shadow-lg ring ring-default',
+      title: 'text-2xl font-semibold',
+    }"
+  >
     <template #body>
       <UForm
         :schema="schema"
@@ -183,24 +236,6 @@ onMounted(fetchOptions);
         @submit="onSubmit"
         class="space-y-4"
       >
-        <UFormField label="Issue Details" name="issueDetails" required>
-          <UTextarea
-            v-model="form.issueDetails"
-            placeholder="Describe the issue..."
-            :rows="4"
-            class="w-full"
-          />
-        </UFormField>
-
-        <UFormField label="Action Plan" name="actionPlan">
-          <UTextarea
-            v-model="form.actionPlan"
-            placeholder="Describe the action plan..."
-            :rows="3"
-            class="w-full"
-          />
-        </UFormField>
-
         <UFormField label="Issue Type" name="issueTypeId" required>
           <USelect
             class="w-full"
@@ -258,6 +293,30 @@ onMounted(fetchOptions);
             label-key="name"
             placeholder="Select status"
           />
+        </UFormField>
+
+        <UFormField label="Issue Details" name="issueDetails" required>
+          <UEditor
+            v-slot="{ editor }"
+            v-model="form.issueDetails"
+            content-type="html"
+            placeholder="Describe the issue..."
+            class="w-full border border-gray-300 rounded-md min-h-[150px]"
+          >
+            <UEditorToolbar :editor="editor" :items="toolbarItems" />
+          </UEditor>
+        </UFormField>
+
+        <UFormField label="Action Plan" name="actionPlan">
+          <UEditor
+            v-slot="{ editor }"
+            v-model="form.actionPlan"
+            content-type="html"
+            placeholder="Describe the action plan..."
+            class="w-full border border-gray-300 rounded-md min-h-[150px]"
+          >
+            <UEditorToolbar :editor="editor" :items="toolbarItems" />
+          </UEditor>
         </UFormField>
 
         <div class="flex gap-4 justify-end pt-4">
