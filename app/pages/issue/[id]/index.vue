@@ -77,10 +77,10 @@ const fetchIssue = async () => {
   loadingIssue.value = true;
   try {
     const res: any = await api.getIssue(id.value);
-    issue.value = res.items?.result ?? null;
+    issue.value = (await res.items?.result) ?? null;
 
     selectedStatus.value = issue?.value?.status || 0;
-    oldStatus.value = issue?.value?.status || 0; // ✅ store original status
+    oldStatus.value = issue?.value?.status || 0;
   } catch (err) {
     console.error("Failed to fetch issue", err);
     issue.value = null;
@@ -194,17 +194,31 @@ const items: TabsItem[] = [
 ];
 
 const activeTab = ref("details");
+
+const editIssueLink = computed(() =>
+  issue.value ? `/issue/${issue.value.id}/edit` : null,
+);
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
+    <div class="mb-6 flex items-center justify-between">
+      <div class="flex gap-2">
+        <UButton
+          @click="router.back()"
+          variant="outline"
+          icon="i-lucide-arrow-left"
+        >
+          Back
+        </UButton>
+      </div>
       <UButton
-        @click="router.back()"
-        variant="outline"
-        icon="i-lucide-arrow-left"
+        v-if="editIssueLink"
+        :to="editIssueLink"
+        color="primary"
+        icon="i-lucide-edit-2"
       >
-        Back
+        Edit Issue
       </UButton>
     </div>
 
@@ -400,4 +414,3 @@ const activeTab = ref("details");
     </div>
   </div>
 </template>
-

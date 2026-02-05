@@ -1,34 +1,19 @@
 <script setup lang="ts">
+definePageMeta({
+  title: "Create Issue",
+  layout: "sidebar-dashboard",
+  middleware: "auth",
+});
+
 import { z } from "zod";
 import type { FormSubmitEvent } from "#ui/types";
 import type { EditorToolbarItem } from "@nuxt/ui";
 
-const isOpen = defineModel<boolean>({ default: false });
-
-const emit = defineEmits<{
-  close: [boolean];
-}>();
-
 const api = useApi();
 const toast = useToast();
+const route = useRoute();
+const router = useRouter();
 const auth = (await api.getSession()) as SessionUser;
-
-export type SessionUser = {
-  userId: number;
-  username: string;
-  role: "USER" | "ADMIN" | string;
-  profile: UserProfile;
-};
-
-export type UserProfile = {
-  UserId: number;
-  Username: string;
-  EmplId: string;
-  Employeename2: string;
-  Corporate: string;
-  Positionname: string;
-  Departmentname: string;
-};
 
 const issueTypes = ref([]);
 const groups = ref([]);
@@ -36,10 +21,11 @@ const employees = ref<any>([]);
 const status = ref([]);
 const selectedEmployee = ref<{ value: string; label: string } | null>(null);
 const loading = ref(false);
+const loadingIssue = ref(false);
 const search = ref("");
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-                          
+
 const schema = z.object({
   issueDetails: z.string().min(1, "Issue details are required"),
   actionPlan: z.string().optional().nullable(),
@@ -119,9 +105,6 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         status: undefined,
       });
       selectedEmployee.value = null;
-
-      isOpen.value = false;
-      emit("close", true);
     }
   } catch (error) {
     console.error("Failed to create issue", error);
@@ -219,120 +202,145 @@ const toolbarItems: EditorToolbarItem[][] = [
 </script>
 
 <template>
-  <UModal
-    v-model:open="isOpen"
-    title="Add Issue"
-    description="Add a New Issue"
-    :ui="{
-      content:
-        'w-[calc(100vw-2rem)] max-w-4xl rounded-lg shadow-lg ring ring-default',
-      title: 'text-2xl font-semibold',
-    }"
-  >
-    <template #body>
+  <div>
+    <div class="mb-6">
+      <UButton
+        @click="router.back()"
+        variant="outline"
+        icon="i-lucide-arrow-left"
+      >
+        Back
+      </UButton>
+    </div>
+
+    <!-- Loading state -->
+    <div v-if="loadingIssue">
+      <LoadingSpinner />
+    </div>
+
+    <div v-else class="space-y-4">
+      <h1 class="text-2xl font-semibold mb-4">Create New Issue</h1>
       <UForm
         :schema="schema"
         :state="form"
         @submit="onSubmit"
-        class="space-y-4"
+        class="space-y-6 max-w-full mx-auto"
       >
-        <UFormField label="Issue Type" name="issueTypeId" required>
-          <USelect
-            class="w-full"
-            v-model="form.issueTypeId"
-            :items="issueTypes"
-            value-key="id"
-            label-key="name"
-            placeholder="Select issue type"
-          />
-        </UFormField>
 
-        <UFormField
-          label="Responsible Group"
-          name="responsibleGroupId"
-          required
-        >
-          <USelect
-            class="w-full"
-            v-model="form.responsibleGroupId"
-            :items="groups"
-            value-key="id"
-            label-key="name"
-            placeholder="Select group"
-          />
-        </UFormField>
+        <!-- ISSUE INFORMATION -->
+        <UCard class="rounded-xl shadow-sm">
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon
+                name="i-heroicons-exclamation-circle"
+                class="w-5 h-5 text-primary"
+              />
+              <h2 class="font-semibold text-lg">Issue Information</h2>
+            </div>
+          </template>
 
-        <UFormField label="Responsible Employee" name="responsibleEmpId">
-          <USelectMenu
-            class="w-full"
-            v-model="selectedEmployee"
-            v-model:search-term="search"
-            :items="employees"
-            placeholder="Type to search employee"
-            :searchable="true"
-            clear
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <UFormField label="Issue Type" name="issueTypeId" required>
+              <USelect
+                v-model="form.issueTypeId"
+                :items="issueTypes"
+                value-key="id"
+                label-key="name"
+                placeholder="Select issue type"
+                class="w-full"
+              />
+            </UFormField>
+
+            <UFormField label="Department" name="responsibleGroupId" required>
+              <USelect
+                v-model="form.responsibleGroupId"
+                :items="groups"
+                value-key="id"
+                label-key="name"
+                placeholder="Select department"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+
+          <UFormField label="Assign To" name="responsibleEmpId" class="mt-4">
+            <USelectMenu
+              v-model="selectedEmployee"
+              v-model:search-term="search"
+              :items="employees"
+              placeholder="Search employee..."
+              searchable
+              clear
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Issue Details"
+            name="issueDetails"
+            required
+            class="mt-4"
           >
-            <template #empty>
-              <div class="flex flex-col items-center justify-center py-6 gap-3">
-                <UIcon
-                  name="i-heroicons-magnifying-glass"
-                  class="w-8 h-8 text-gray-400"
-                />
-                <p class="text-sm text-gray-500">Type to search employee</p>
-              </div>
-            </template>
-          </USelectMenu>
-        </UFormField>
+            <UEditor
+              v-slot="{ editor }"
+              v-model="form.issueDetails"
+              content-type="html"
+              placeholder="Describe the issue clearly..."
+              class="border rounded-lg min-h-[180px] w-full p-1"
+            >
+              <UEditorToolbar :editor="editor" :items="toolbarItems" />
+            </UEditor>
+          </UFormField>
+        </UCard>
 
-        <UFormField label="Status" name="status" required>
-          <USelect
-            class="w-full"
-            v-model="form.status"
-            :items="status"
-            value-key="id"
-            label-key="name"
-            placeholder="Select status"
-          />
-        </UFormField>
+        <!-- ACTION PLAN -->
+        <UCard class="rounded-xl shadow-sm">
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon
+                name="i-heroicons-clipboard-document-check"
+                class="w-5 h-5 text-primary"
+              />
+              <h2 class="font-semibold text-lg">Action Plan</h2>
+            </div>
+          </template>
 
-        <UFormField label="Issue Details" name="issueDetails" required>
-          <UEditor
-            v-slot="{ editor }"
-            v-model="form.issueDetails"
-            content-type="html"
-            placeholder="Describe the issue..."
-            class="w-full border border-gray-300 rounded-md min-h-[150px]"
-          >
-            <UEditorToolbar :editor="editor" :items="toolbarItems" />
-          </UEditor>
-        </UFormField>
+          <UFormField name="actionPlan">
+            <UEditor
+              v-slot="{ editor }"
+              v-model="form.actionPlan"
+              content-type="html"
+              placeholder="Outline the steps to resolve the issue..."
+              class="border rounded-lg min-h-[160px] w-full p-1"
+            >
+              <UEditorToolbar :editor="editor" :items="toolbarItems" />
+            </UEditor>
+          </UFormField>
 
-        <UFormField label="Action Plan" name="actionPlan">
-          <UEditor
-            v-slot="{ editor }"
-            v-model="form.actionPlan"
-            content-type="html"
-            placeholder="Describe the action plan..."
-            class="w-full border border-gray-300 rounded-md min-h-[150px]"
-          >
-            <UEditorToolbar :editor="editor" :items="toolbarItems" />
-          </UEditor>
-        </UFormField>
+          <UFormField label="Status" name="status" required class="mt-4">
+            <USelect
+              v-model="form.status"
+              :items="status"
+              value-key="id"
+              label-key="name"
+              placeholder="Select status"
+            />
+          </UFormField>
+        </UCard>
 
-        <div class="flex gap-4 justify-end pt-4">
+        <!-- FOOTER ACTIONS -->
+        <div class="flex justify-end gap-3 pt-6 border-t">
           <UButton
-            type="button"
-            variant="ghost"
-            @click="isOpen = false"
-            :disabled="loading"
+            type="submit"
+            color="primary"
+            size="lg"
+            :loading="loading"
+            icon="i-heroicons-paper-airplane"
           >
-            Cancel
-          </UButton>
-          <UButton type="submit" :loading="loading" variant="solid">
             Create Issue
           </UButton>
         </div>
       </UForm>
-    </template>
-  </UModal>
+    </div>
+  </div>
 </template>

@@ -21,7 +21,7 @@
         </UDashboardNavbar>
       </template>
       <template #body>
-        <div class="pt-10 px-6">
+        <div class="pt-5 px-6">
           <UApp>
             <slot />
           </UApp>

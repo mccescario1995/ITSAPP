@@ -204,7 +204,7 @@ const columns: TableColumn<Issue>[] = [
           color: "primary",
           variant: "solid",
           icon: "i-lucide-edit-2",
-          onClick: () => openEditModal(issue),
+          to: `/issue/${issue.id}/edit`,
         }),
         h(UButton, {
           size: "xs",
@@ -244,21 +244,6 @@ const columns: TableColumn<Issue>[] = [
       });
     },
   },
-    // {
-    //   accessorKey: "actionPlan",
-    //   header: "Action Plan",
-    //   cell: ({ row }) => {
-    //     const issue = row.original;
-    //     const UEditor = resolveComponent("UEditor");
-
-    //     return h(UEditor, {
-    //       modelValue: issue.actionPlan,
-    //       editable: false,
-    //       class:
-    //         "max-w-45 line-clamp-1 prose prose-sm [&_p]:my-0 [&_ul]:my-0 [&_ol]:my-0",
-    //     });
-    //   },
-    // },
   { accessorKey: "issueType", header: "Issue Type" },
   { accessorKey: "responsibleGroupName", header: "Responsible Group" },
   { accessorKey: "responsibleEmployee", header: "Responsible Employee" },
@@ -298,8 +283,9 @@ watch(
 <template>
   <div class="w-full space-y-4 pb-4">
     <div>
-      <UButton label="Add Issue" @click="isModalOpen = true" />
-      <CreateIssueModal v-model="isModalOpen" @close="handleClose" />
+      <!-- <UButton label="Add Issue" @click="isModalOpen = true" />
+      <CreateIssueModal v-model="isModalOpen" @close="handleClose" /> -->
+      <UButton label="Add Issue" to="/issue/create" />
     </div>
     <div class="flex px-4 py-2 border-b border-accented">
       <div class="justify-start mr-4">
