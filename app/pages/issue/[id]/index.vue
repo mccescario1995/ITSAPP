@@ -205,7 +205,7 @@ const editIssueLink = computed(() =>
     <div class="mb-6 flex items-center justify-between">
       <div class="flex gap-2">
         <UButton
-          @click="router.back()"
+          @click="router.push('/issue')"
           variant="outline"
           icon="i-lucide-arrow-left"
         >

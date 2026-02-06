@@ -314,10 +314,18 @@ watch(
     <UTable :data="issues" :columns="columns" :loading="loading" />
 
     <div class="border-t flex border-default pt-4 px-4">
+      <UPagination
+        class=" justify-start"
+        :page="pagination.page"
+        :items-per-page="pagination.pageSize"
+        :total="pagination.total"
+        @update:page="(p) => (pagination.page = p)"
+      />
+      
       <UFormField
         label="Jump to page:"
         orientation="horizontal"
-        class="justify-start"
+        class="ml-auto"
       >
         <UInput
           type="text"
@@ -331,13 +339,7 @@ watch(
           @paste="numbersOnlyOnPaste"
       /></UFormField>
 
-      <UPagination
-        class="ml-auto"
-        :page="pagination.page"
-        :items-per-page="pagination.pageSize"
-        :total="pagination.total"
-        @update:page="(p) => (pagination.page = p)"
-      />
+      
     </div>
     <EditIssueModal
       v-if="editModal.issue"

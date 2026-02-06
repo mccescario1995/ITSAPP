@@ -115,6 +115,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
     });
   } finally {
     loading.value = false;
+      router.push(`/issue`);
   }
 };
 
