@@ -196,7 +196,7 @@ const items: TabsItem[] = [
 const activeTab = ref("details");
 
 const editIssueLink = computed(() =>
-  issue.value ? `/issue/${issue.value.id}/edit` : null,
+  issue.value ? `/issue/edit/${issue.value.id}` : null,
 );
 </script>
 

@@ -6,6 +6,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "generate:iis": "npm run generate && rmdir /S /Q D:\\IIS\\its && mkdir D:\\IIS\\its && xcopy .output\\public D:\\IIS\\its /E /I /Y",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },

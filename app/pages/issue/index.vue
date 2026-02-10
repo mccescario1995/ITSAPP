@@ -204,7 +204,7 @@ const columns: TableColumn<Issue>[] = [
           color: "primary",
           variant: "solid",
           icon: "i-lucide-edit-2",
-          to: `/issue/${issue.id}/edit`,
+          to: `/issue/edit/${issue.id}`,
         }),
         h(UButton, {
           size: "xs",
