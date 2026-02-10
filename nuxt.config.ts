@@ -32,9 +32,10 @@ export default defineNuxtConfig({
   },
 
   ssr:false,
-
-  nitro: {
-    preset: 'static'
+  router: {
+    options: {
+      hashMode: true
+    }
   },
 
   vite: {

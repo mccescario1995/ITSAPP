@@ -1,17 +1,17 @@
 // middleware/auth.ts
 export default defineNuxtRouteMiddleware(async (to) => {
+  if (process.server) return; // skip SSR
+
   const toast = useToast();
 
   const auth = useAuthStorage();
 
   // Skip on login page to prevent redirect loops
-  if (to.path === "/") {
-    return;
-  }
+  if (to.path === "/") return;
 
-  if (process.client) {
-    auth.load();
-  }
+  // if (process.client) {
+  auth.load();
+  // }
 
   try {
     await auth.fetchSession();
