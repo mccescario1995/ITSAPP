@@ -33,7 +33,11 @@ export default defineNuxtConfig({
 
   ssr:false,
 
-   vite: {
+  nitro: {
+    preset: 'static'
+  },
+
+  vite: {
     optimizeDeps: {
       include: [
         '@nuxt/ui > prosemirror-state',
