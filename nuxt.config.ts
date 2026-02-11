@@ -32,7 +32,7 @@ export default defineNuxtConfig({
   },
 
   ssr:false,
-  router: {
+  router: { // to use # in url
     options: {
       hashMode: true
     }
