@@ -1,9 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   
-  compatibilityDate: "2025-07-15",
+  compatibilityDate: "2026-02-11",
   devtools: { enabled: true },
-  modules: ["@nuxt/ui"],
+  modules: ['@nuxt/ui','@pinia/nuxt'],
 
   runtimeConfig: {
     public: {
