@@ -1,6 +1,11 @@
 <template>
   <UDashboardGroup>
-    <UDashboardSidebar collapsible>
+    <UDashboardSidebar
+      collapsible
+      :ui="{
+        root: 'transition-all duration-500 ease-in-out',
+      }"
+    >
       <template #header>
         <h1 class="mx-auto font-bold">ITS</h1>
       </template>

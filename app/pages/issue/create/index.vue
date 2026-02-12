@@ -22,6 +22,7 @@ const status = ref([]);
 const selectedEmployee = ref<{ value: string; label: string } | null>(null);
 const loading = ref(false);
 const loadingIssue = ref(false);
+const loadingSearch = ref(false);
 const search = ref("");
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -115,7 +116,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
     });
   } finally {
     loading.value = false;
-      router.push(`/issue`);
+    router.push(`/issue`);
   }
 };
 
@@ -126,17 +127,24 @@ const fetchEmployees = async (query: string) => {
   }
 
   try {
-    const res = await api.searchEmployees(query);
-
-    const items = (res.data?.items ?? []).map((e: any) => ({
+    loadingSearch.value = true;
+    const empResponse: any = await api.searchEmployees(query);
+    console.log("Search Employee response: ", empResponse);
+    const items = (empResponse.data.items ?? []).map((e: any) => ({
       value: e.emplId,
       label: e.employeename,
     }));
+    console.log("Employee items: ", items);
 
     employees.value = items;
+
+    console.log("Employees: ", employees);
+    console.log("Employee value: ", employees.value);
   } catch (err) {
     console.error("Employee search failed:", err);
     employees.value = [];
+  }finally{
+    loadingSearch.value = false;
   }
 };
 
@@ -227,7 +235,6 @@ const toolbarItems: EditorToolbarItem[][] = [
         @submit="onSubmit"
         class="space-y-6 max-w-full mx-auto"
       >
-
         <!-- ISSUE INFORMATION -->
         <UCard class="rounded-xl shadow-sm">
           <template #header>
@@ -273,6 +280,9 @@ const toolbarItems: EditorToolbarItem[][] = [
               searchable
               clear
               class="w-full"
+              :loading="loadingSearch"
+              loading-icon="i-lucide-loader"
+              :ignore-filter="true"
             />
           </UFormField>
 

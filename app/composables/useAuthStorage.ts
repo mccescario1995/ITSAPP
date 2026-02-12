@@ -8,7 +8,7 @@ export const useAuthStorage = () => {
       return;
     }
 
-    sessionStorage.setItem("userProfile", JSON.stringify(profile));
+    // sessionStorage.setItem("userProfile", JSON.stringify(profile));
     userProfile.value = profile;
   };
 

@@ -22,7 +22,7 @@ export default defineNuxtConfig({
   app: {
     baseURL: "/its/",
     head: {
-      link: [{ rel: "icon", type: "img/png", href: "/favico.png" }],
+      link: [{ rel: "icon", type: "img/png", href: "/its/favicon.ico" }],
       title: "ITS",
     },
   },
@@ -44,7 +44,7 @@ export default defineNuxtConfig({
         '@nuxt/ui > prosemirror-state',
         '@nuxt/ui > prosemirror-transform',
         '@nuxt/ui > prosemirror-model',
-        '@nuxt/ui > prosemirror-view',
+        '@nuxt/ui > prosemirror-view',                                                                                                                                                                                                                            
         '@nuxt/ui > prosemirror-gapcursor'
       ]
     }

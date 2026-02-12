@@ -245,8 +245,23 @@ const columns: TableColumn<Issue>[] = [
     },
   },
   { accessorKey: "issueType", header: "Issue Type" },
-  { accessorKey: "responsibleGroupName", header: "Responsible Group" },
-  { accessorKey: "responsibleEmployee", header: "Responsible Employee" },
+  {
+    accessorKey: "responsibleGroupName",
+    header: "Responsible Group",
+  },
+  {
+    accessorKey: "responsibleEmployee",
+    header: "Responsible Employee",
+    cell: ({ row }) => {
+      const emp: any = row.original;
+
+      if (emp.responsibleEmployee == null) {
+        return "Not assigned";
+      }
+
+      return emp.responsibleEmployee;
+    },
+  },
 ];
 
 // Issue item type
@@ -313,15 +328,17 @@ watch(
 
     <UTable :data="issues" :columns="columns" :loading="loading" />
 
+
+
     <div class="border-t flex border-default pt-4 px-4">
       <UPagination
-        class=" justify-start"
+        class="justify-start"
         :page="pagination.page"
         :items-per-page="pagination.pageSize"
         :total="pagination.total"
         @update:page="(p) => (pagination.page = p)"
       />
-      
+
       <UFormField
         label="Jump to page:"
         orientation="horizontal"
@@ -339,7 +356,7 @@ watch(
           @paste="numbersOnlyOnPaste"
       /></UFormField>
 
-      
+
     </div>
     <EditIssueModal
       v-if="editModal.issue"
@@ -356,4 +373,5 @@ watch(
       @success="handleDeleteSuccess"
     />
   </div>
+
 </template>

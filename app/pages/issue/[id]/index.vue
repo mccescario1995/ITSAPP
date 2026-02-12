@@ -11,6 +11,7 @@ const api = useApi();
 const route = useRoute();
 const router = useRouter();
 const id = computed(() => Number(route.params.id));
+const toast = useToast();
 
 const auth = (await api.getSession()) as SessionUser;
 export type UserProfile = {
@@ -70,6 +71,21 @@ const selectedStatus = ref<number>(0);
 const oldStatus = ref<number>(0);
 
 const replyMessage = ref("");
+
+// Edit mode state
+const editingTab = ref<string | null>(null);
+const isSaving = ref(false);
+
+// Check if current user owns the issue
+const isOwner = computed(() => {
+  const issueUserId = issue.value?.createdByUserId ?? issue.value?.Id;
+  return issueUserId === auth.userId;
+});
+
+// Determine which tab is being edited
+const isEditable = computed(() => {
+  return editingTab.value !== null;
+});
 
 // Fetch issue
 const fetchIssue = async () => {
@@ -140,6 +156,54 @@ const formatDate = (date: string) => {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(d);
+};
+
+// Edit handlers
+const handleEdit = (tab: string) => {
+  editingTab.value = tab;
+};
+
+const handleSave = async (content: string) => {
+  if (!id.value) return;
+
+  isSaving.value = true;
+  try {
+    const updateData: Record<string, any> = {};
+
+    // Determine which field to update based on the tab
+    if (editingTab.value === "details") {
+      updateData.issueDetails = content;
+    } else if (editingTab.value === "action") {
+      updateData.actionPlan = content;
+    }
+
+    await api.updateIssue(id.value, updateData);
+
+    toast.add({
+      title: "Success",
+      description: `Issue ${editingTab.value === "details" ? "details" : "action plan"} updated successfully`,
+      icon: "i-lucide-check-circle",
+      color: "success",
+    });
+
+    // Refresh issue data
+    await fetchIssue();
+  } catch (err) {
+    console.error("Failed to update issue", err);
+    toast.add({
+      title: "Error",
+      description: "Failed to update issue. Please try again.",
+      icon: "i-lucide-alert-circle",
+      color: "error",
+    });
+  } finally {
+    isSaving.value = false;
+    editingTab.value = null;
+  }
+};
+
+const handleCancel = () => {
+  editingTab.value = null;
 };
 
 // Submit reply
@@ -294,6 +358,12 @@ const editIssueLink = computed(() =>
               :value="issue"
               :issue="issue"
               :tab="item.tab"
+              :editable="isEditable && editingTab === item.tab"
+              :is-owner="isOwner"
+              :saving="isSaving"
+              @edit="handleEdit"
+              @save="handleSave"
+              @cancel="handleCancel"
             />
           </template>
         </UTabs>
