@@ -162,6 +162,38 @@ class ApiClient {
 
     return { data: { items: res.data?.items ?? [] } };
   }
+
+  // ======================
+  // ISSUE LOCKING
+  // ======================
+
+  async getIssueLockStatus(id: number) {
+    return await $fetch(`${this.baseApiUrl}/api/Issue/${id}/lock-status`, {
+      method: "GET",
+      credentials: "include",
+    });
+  }
+
+  async lockIssue(id: number) {
+    return await $fetch(`${this.baseApiUrl}/api/Issue/${id}/lock`, {
+      method: "POST",
+      credentials: "include",
+    });
+  }
+
+  async unlockIssue(id: number) {
+    return await $fetch(`${this.baseApiUrl}/api/Issue/${id}/unlock`, {
+      method: "POST",
+      credentials: "include",
+    });
+  }
+
+  async heartbeatIssue(id: number) {
+    return await $fetch(`${this.baseApiUrl}/api/Issue/${id}/heartbeat`, {
+      method: "POST",
+      credentials: "include",
+    });
+  }
 }
 
 export const useApi = () => {

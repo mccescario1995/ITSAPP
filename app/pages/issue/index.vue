@@ -7,7 +7,13 @@ definePageMeta({
 import { h } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 
-const { allowOnlyNumbers, numbersOnlyOnPaste } = await useInputRestriction();
+const {
+  allowOnlyNumbers,
+  numbersOnlyOnPaste,
+  allowOnlyNumbersWithMax,
+  numbersOnlyOnPasteWithMax,
+  validateMaxPage,
+} = await useInputRestriction();
 
 export type UserProfile = {
   UserId: number;
@@ -38,6 +44,7 @@ const pagination = ref({
   page: 1,
   pageSize: 5,
   total: 0,
+  totalPages: 0,
 });
 
 const fetchIssues = async () => {
@@ -51,6 +58,7 @@ const fetchIssues = async () => {
 
     issues.value = res.data.items;
     pagination.value.total = res.data.pagination.totalCount;
+    pagination.value.totalPages = res.data.pagination.totalPages;
   } catch (err) {
     console.error("Failed to fetch issues", err);
   } finally {
@@ -58,19 +66,167 @@ const fetchIssues = async () => {
   }
 };
 
+const maxPage = computed(() => {
+  return Math.ceil(pagination.value.total / pagination.value.pageSize) || 1;
+});
+
+// Computed handler for keypress with max validation and edge cases
+const keypressWithMax = computed(() => {
+  return (event: KeyboardEvent) => {
+    const charCode = event.charCode || event.keyCode;
+
+    // Allow control keys (backspace=8, tab=9, delete=46, arrows=37/39, enter=13, escape=27)
+    if ([8, 9, 37, 39, 46, 13, 27].includes(charCode)) return;
+
+    // Prevent if empty/only zeros and would exceed max
+    const target = event.target as HTMLInputElement;
+    const currentValue = target.value || "";
+    const newChar = String.fromCharCode(charCode);
+    const newValue = currentValue + newChar;
+
+    // Check if it's a number
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+      return;
+    }
+
+    // Prevent leading zeros (edge case)
+    if (currentValue === "0" && newChar !== "") {
+      event.preventDefault();
+      return;
+    }
+
+    // Prevent if value would exceed max page
+    if (parseInt(newValue) > maxPage.value) {
+      event.preventDefault();
+      return;
+    }
+
+    // Prevent if value is 0
+    if (parseInt(newValue) === 0) {
+      event.preventDefault();
+      return;
+    }
+  };
+});
+
+// Computed handler for paste with max validation and edge cases
+const pasteWithMax = computed(() => {
+  return (event: ClipboardEvent) => {
+    const pasted = event.clipboardData?.getData("text") ?? "";
+
+    // Empty paste
+    if (!pasted) {
+      event.preventDefault();
+      return;
+    }
+
+    // Allow only numbers
+    if (!/^[0-9]+$/.test(pasted)) {
+      event.preventDefault();
+      return;
+    }
+
+    const pastedNum = parseInt(pasted);
+
+    // Prevent if exceeds max page
+    if (pastedNum > maxPage.value) {
+      event.preventDefault();
+      return;
+    }
+
+    // Prevent if 0
+    if (pastedNum === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    // Prevent leading zeros (edge case)
+    if (/^0+$/.test(pasted)) {
+      event.preventDefault();
+      return;
+    }
+  };
+});
+
+// Computed handler for input to validate on change
+const inputValidation = computed(() => {
+  return (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = target.value;
+
+    // Handle empty input
+    if (value === "" || value === null || value === undefined) {
+      return; // Let v-model handle empty
+    }
+
+    const numValue = parseInt(value);
+
+    // Invalid number
+    if (isNaN(numValue)) {
+      target.value = "1";
+      pagination.value.page = 1;
+      return;
+    }
+
+    // Exceeds max page
+    if (numValue > maxPage.value) {
+      target.value = maxPage.value.toString();
+      pagination.value.page = maxPage.value;
+      return;
+    }
+
+    // Less than 1
+    if (numValue < 1) {
+      target.value = "1";
+      pagination.value.page = 1;
+      return;
+    }
+
+    // Valid - update pagination
+    pagination.value.page = numValue;
+  };
+});
+
 const onPageChange = () => {
   // Ensure valid page number
   if (!pagination.value.page || pagination.value.page < 1) {
     pagination.value.page = 1;
   }
 
-  const maxPage = Math.ceil(pagination.value.total / pagination.value.pageSize);
-
-  if (pagination.value.page > maxPage) {
-    pagination.value.page = maxPage || 1;
+  if (pagination.value.page > maxPage.value) {
+    pagination.value.page = maxPage.value;
   }
 
   fetchIssues();
+};
+
+const onPageSwitch = () => {
+  if (pagination.value.page > maxPage.value) {
+    pagination.value.page = maxPage.value;
+  }
+  if (pagination.value.page < 1) {
+    pagination.value.page = 1;
+  }
+
+  if (!pagination.value.page || pagination.value.page < 1) {
+    pagination.value.page = 1;
+  }
+
+  if (pagination.value.page > maxPage.value) {
+    pagination.value.page = maxPage.value;
+  }
+
+  fetchIssues();
+};
+
+const onPageInput = () => {
+  if (pagination.value.page > maxPage.value) {
+    pagination.value.page = maxPage.value;
+  }
+  if (pagination.value.page < 1) {
+    pagination.value.page = 1;
+  }
 };
 
 type IssueStatus = {
@@ -95,21 +251,6 @@ const fetchStatuses = async () => {
   } finally {
     loadingStatus.value = false;
   }
-};
-
-const onPageSwitch = () => {
-  // Ensure valid page number
-  if (!pagination.value.page || pagination.value.page < 1) {
-    pagination.value.page = 1;
-  }
-
-  const maxPage = Math.ceil(pagination.value.total / pagination.value.pageSize);
-
-  if (pagination.value.page > maxPage) {
-    pagination.value.page = maxPage || 1;
-  }
-
-  fetchIssues();
 };
 
 onMounted(fetchStatuses);
@@ -144,13 +285,6 @@ const editModal = ref({
   isOpen: false,
   issue: null as Issue | null,
 });
-
-const openEditModal = (issue: Issue) => {
-  editModal.value = {
-    isOpen: true,
-    issue,
-  };
-};
 
 const closeEditModal = () => {
   editModal.value = {
@@ -278,14 +412,6 @@ export type Issue = {
   status: number;
 };
 
-const isModalOpen = ref(false);
-
-const handleClose = (success: boolean) => {
-  if (success) {
-    fetchIssues();
-  }
-};
-
 watch(
   () => [pagination.value.page, pagination.value.pageSize, globalFilter.value],
   fetchIssues,
@@ -328,8 +454,6 @@ watch(
 
     <UTable :data="issues" :columns="columns" :loading="loading" />
 
-
-
     <div class="border-t flex border-default pt-4 px-4">
       <UPagination
         class="justify-start"
@@ -347,16 +471,18 @@ watch(
         <UInput
           type="text"
           v-model.number="pagination.page"
-          min="1"
           size="md"
-          class="w-7.5"
+          class="w-15"
+          :max="maxPage"
           :aria-label="'Go to page'"
           @change="onPageSwitch"
-          @keypress="allowOnlyNumbers"
-          @paste="numbersOnlyOnPaste"
-      /></UFormField>
-
-
+          @keypress="keypressWithMax"
+          @paste="pasteWithMax"
+          @input="inputValidation"
+        />
+        <!-- @keypress="allowOnlyNumbers"
+          @paste="numbersOnlyOnPaste" -->
+      </UFormField>
     </div>
     <EditIssueModal
       v-if="editModal.issue"
@@ -373,5 +499,4 @@ watch(
       @success="handleDeleteSuccess"
     />
   </div>
-
 </template>

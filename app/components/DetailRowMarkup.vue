@@ -12,6 +12,7 @@ const props = defineProps<{
   tab?: any;
   editable?: boolean;
   isOwner?: boolean;
+  canEdit?: boolean;
   saving?: boolean;
 }>();
 
@@ -208,9 +209,9 @@ const toolbarItems: EditorToolbarItem[][] = [
             {{ formatDate(createdDate) }}
           </span>
 
-          <!-- Edit button - only shown when user owns the issue and not already editing -->
+          <!-- Edit button - only shown when user can edit the issue and not already editing -->
           <UButton
-            v-if="props.isOwner && !props.editable"
+            v-if="props.isOwner && props.editable"
             icon="i-lucide-edit-2"
             size="xs"
             variant="ghost"

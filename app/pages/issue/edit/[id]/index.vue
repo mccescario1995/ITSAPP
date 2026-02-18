@@ -308,6 +308,7 @@ const toolbarItems: EditorToolbarItem[][] = [
               searchable
               clear
               class="w-full"
+              ignore-filter
             />
           </UFormField>
 

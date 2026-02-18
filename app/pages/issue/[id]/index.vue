@@ -34,6 +34,9 @@ export type SessionUser = {
 const { fetchSession } = useAuthStorage();
 const userProfile = await fetchSession();
 
+// Issue Locking
+const { lockStatus, isEditable: canEditIssue, initLock, cleanup, startHeartbeat } = useIssueLock(id);
+
 // Types
 type IssueStatus = {
   id: number;
@@ -250,6 +253,12 @@ onMounted(() => {
   fetchStatuses();
   fetchIssueMessages();
   fetchIssue();
+  initLock();
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  cleanup();
 });
 
 const items: TabsItem[] = [
@@ -266,6 +275,8 @@ const editIssueLink = computed(() =>
 
 <template>
   <div>
+    
+
     <div class="mb-6 flex items-center justify-between">
       <div class="flex gap-2">
         <UButton
@@ -277,7 +288,7 @@ const editIssueLink = computed(() =>
         </UButton>
       </div>
       <UButton
-        v-if="editIssueLink"
+        v-if="editIssueLink && canEditIssue"
         :to="editIssueLink"
         color="primary"
         icon="i-lucide-edit-2"
@@ -285,7 +296,27 @@ const editIssueLink = computed(() =>
         Edit Issue
       </UButton>
     </div>
+<!-- Read-only banner -->
+    <UAlert
+      v-if="!canEditIssue && lockStatus.isLocked"
+      icon="i-lucide-lock"
+      title="Read-Only Mode"
+      :description="`This issue is being edited by ${lockStatus.lockedBy?.username}`"
+      color="warning"
+      variant="subtle"
+      class="mb-4"
+    />
 
+    <!-- Editing banner -->
+    <UAlert
+      v-if="!canEditIssue && lockStatus.isLocked"
+      icon="i-lucide-pen-line"
+      title="Edit Mode"
+      :description="`This issue is being edited by ${lockStatus.lockedBy?.username}`"
+      color="warning"
+      variant="subtle"
+      class="mb-4"
+    />
     <!-- Loading state -->
     <div v-if="loadingIssue">
       <LoadingSpinner />
@@ -360,6 +391,7 @@ const editIssueLink = computed(() =>
               :tab="item.tab"
               :editable="isEditable && editingTab === item.tab"
               :is-owner="isOwner"
+              :can-edit="canEditIssue"
               :saving="isSaving"
               @edit="handleEdit"
               @save="handleSave"
